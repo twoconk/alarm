@@ -10,10 +10,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,145 +49,172 @@ public class Main2Activity extends AppCompatActivity implements AdapterView.OnIt
     @SuppressLint("WrongConstant")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
         ActivityCollector.AddActivity(this);
         ActionBar actionBar = getSupportActionBar();
-        helper = new MyAlarmClockHelper(this, "AlarmClock", null, 1);
         if (actionBar != null) {
             actionBar.hide();
         }
-        initAlarmClock();
-        adapter = new AlarmClockAdapter(Main2Activity.this, R.layout.alarm_list, alarmClockList);
-        ListView listView = (ListView) findViewById(R.id.alarm_view);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(this);
-        final Button add = (Button) findViewById(R.id.add);
-        add.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                isAllPick = !isAllPick;
-                if (isEdit) {
-                    adapter.toggleAllPickStatus();
-                    if (isAllPick) {
-                        add.setText(R.string.cancel_all_pick);
-                        for (int i = 0; i < alarmClockList.size(); i++) {
-                            AlarmClock alarmClock = alarmClockList.get(i);
-                            alarmClock.setOpenCheckBox(1);
-                        }
-                    } else {
-                        add.setText(R.string.all_pick);
-                        for (int i = 0; i < alarmClockList.size(); i++) {
-                            AlarmClock alarmClock = alarmClockList.get(i);
-                            alarmClock.setOpenCheckBox(0);
-                        }
-                    }
-                    adapter.notifyDataSetChanged();
-                } else {
-                    Intent intent = new Intent(Main2Activity.this, NewAlarmClockActivity.class);
+        helper = new MyAlarmClockHelper(this, "AlarmClock", null, 1);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        int number = 0;
+        @SuppressLint("Recycle") Cursor mCursor = db.rawQuery("select * from AlarmClock", null);
+        number = mCursor.getCount();
+        if (number == 0) {
+            setContentView(R.layout.activity_main);
+            Button add = (Button) findViewById(R.id.add);
+            add.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Main2Activity.this, NewAlarmClockActivity.class);//新建到新建窗口
                     startActivity(intent);
                 }
-            }
-        });
-        final Button compile = (Button) findViewById(R.id.compile);
-        compile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isEdit = !isEdit;
-                if (isEdit) {
-                    compile.setText(R.string.back_to);
-                    TextView title_text = (TextView) findViewById(R.id.title_text);
-                    title_text.setText(R.string.edit_alarm);
-                    add.setText(R.string.all_pick);
-                    Button delete = (Button) findViewById(R.id.delete);
-                    delete.setVisibility(View.VISIBLE);
-                } else {
-                    compile.setText(R.string.edit);
-                    TextView title_text = (TextView) findViewById(R.id.title_text);
-                    title_text.setText(R.string.alarm);
-                    add.setText(R.string.new_alarm);
-                    Button delete = (Button) findViewById(R.id.delete);
-                    delete.setVisibility(View.GONE);
-                }
-                adapter.toggleEditStatus();
-            }
-        });
-        Button delete = (Button) findViewById(R.id.delete);
-        delete.setOnClickListener(new View.OnClickListener() {
+            });
+        } else {
+            setContentView(R.layout.activity_main2);
 
-            @Override
-            public void onClick(View v) {
-                String[] selectClock = findSelectedClock();
-                if (selectClock == null) {
-                    return;
-                }
-                SQLiteDatabase db = helper.getReadableDatabase();
-                for (String s : selectClock) {
-                    db.delete("AlarmClock", " id = ?", new String[]{s});
-                }
-                isEdit = !isEdit;
-                if (isEdit) {
-                    compile.setText(R.string.back_to);
-                    TextView title_text = (TextView) findViewById(R.id.title_text);
-                    title_text.setText(R.string.edit_alarm);
-                    add.setText(R.string.all_pick);
-                    Button delete = (Button) findViewById(R.id.delete);
-                    delete.setVisibility(View.VISIBLE);
-                } else {
-                    compile.setText(R.string.edit);
-                    TextView title_text = (TextView) findViewById(R.id.title_text);
-                    title_text.setText(R.string.alarm);
-                    add.setText(R.string.new_alarm);
-                    Button delete = (Button) findViewById(R.id.delete);
-                    delete.setVisibility(View.GONE);
-                }
-                if (selectClock.length != 0) {
-                    Toast.makeText(Main2Activity.this, R.string.deleted_success, 2000).show();
-                }
-                adapter.toggleEditStatus();
-                if (alarmClockList.isEmpty()) {
-                    Intent intent = new Intent(Main2Activity.this, MainActivity.class);
-                    startActivity(intent);
-                }
-            }
-        });
-        getTime();
-        if (hours != null && minutes != null) {
-            for (int i = 0; i < sb.length(); i++) {
-                timeHour = hours[i];
-                timeMintue = minutes[i];
-                week = weekArray[i];
-                weekText = weekTextArray[i];
-                alarmId = alarmIdArray[i];
-                if (weekText != null) {
-                    if (getString(R.string.without_repetition).equals(weekText)) {
-                        calendar = Calendar.getInstance();
-                        calendar.setTimeInMillis(System.currentTimeMillis());
-                        calendar.set(Calendar.HOUR_OF_DAY, timeHour);
-                        calendar.set(Calendar.MINUTE, timeMintue);
-                        calendar.set(Calendar.SECOND, 0);
-                        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
-                            calendar.add(Calendar.DAY_OF_MONTH, 1);
-                        }
-                        openAlarm(alarmId);
-                    } else if (!(getString(R.string.without_repetition).equals(weekText))) {
-                        if (week != null) {
-                            int[] a = new int[week.length()];
-                            for (int j = 0; j < week.length(); j++) {
-                                a[j] = Integer.parseInt(String.valueOf(week.charAt(j)));
+            helper = new MyAlarmClockHelper(this, "AlarmClock", null, 1);
+            initAlarmClock();
+            adapter = new AlarmClockAdapter(Main2Activity.this, R.layout.alarm_list, alarmClockList);
+            ListView listView = (ListView) findViewById(R.id.alarm_view);
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener(this);
+            final Button add = (Button) findViewById(R.id.add);
+            add.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    isAllPick = !isAllPick;
+                    if (isEdit) {
+                        adapter.toggleAllPickStatus();
+                        if (isAllPick) {
+                            add.setText(R.string.cancel_all_pick);
+                            for (int i = 0; i < alarmClockList.size(); i++) {
+                                AlarmClock alarmClock = alarmClockList.get(i);
+                                alarmClock.setOpenCheckBox(1);
                             }
-                            Calendar c = Calendar.getInstance();
-                            c.setTimeInMillis(System.currentTimeMillis());
-                            int index = c.get(Calendar.DAY_OF_WEEK);
-                            if (a[index - 1] == 1) {
-                                calendar = Calendar.getInstance();
-                                calendar.setTimeInMillis(System.currentTimeMillis());
-                                calendar.set(Calendar.HOUR_OF_DAY, timeHour);
-                                calendar.set(Calendar.MINUTE, timeMintue);
-                                if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
-                                    calendar.add(Calendar.DAY_OF_MONTH, 1);
+                        } else {
+                            add.setText(R.string.all_pick);
+                            for (int i = 0; i < alarmClockList.size(); i++) {
+                                AlarmClock alarmClock = alarmClockList.get(i);
+                                alarmClock.setOpenCheckBox(0);
+                            }
+                        }
+                        adapter.notifyDataSetChanged();
+                    } else {
+                        Intent intent = new Intent(Main2Activity.this, NewAlarmClockActivity.class);
+                        startActivity(intent);
+                    }
+                }
+            });
+            final Button compile = (Button) findViewById(R.id.compile);
+            compile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    isEdit = !isEdit;
+                    if (isEdit) {
+                        compile.setText(R.string.back_to);
+                        TextView title_text = (TextView) findViewById(R.id.title_text);
+                        title_text.setText(R.string.edit_alarm);
+                        add.setText(R.string.all_pick);
+                        LinearLayout delete = (LinearLayout) findViewById(R.id.delete);
+                        delete.setVisibility(View.VISIBLE);
+                    } else {
+                        compile.setText(R.string.edit);
+                        TextView title_text = (TextView) findViewById(R.id.title_text);
+                        title_text.setText(R.string.alarm);
+                        add.setText(R.string.new_alarm);
+                        LinearLayout delete = (LinearLayout) findViewById(R.id.delete);
+                        delete.setVisibility(View.GONE);
+                    }
+                    adapter.toggleEditStatus();
+                }
+            });
+            LinearLayout delete = (LinearLayout) findViewById(R.id.delete);
+            delete.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    String[] selectClock = findSelectedClock();
+                    if (selectClock == null) {
+                        return;
+                    }
+                    SQLiteDatabase db = helper.getReadableDatabase();
+                    for (String s : selectClock) {
+                        db.delete("AlarmClock", " id = ?", new String[]{s});
+                    }
+                    isEdit = !isEdit;
+                    if (isEdit) {
+                        compile.setText(R.string.back_to);
+                        TextView title_text = (TextView) findViewById(R.id.title_text);
+                        title_text.setText(R.string.edit_alarm);
+                        add.setText(R.string.all_pick);
+                        LinearLayout delete = (LinearLayout) findViewById(R.id.delete);
+                        delete.setVisibility(View.VISIBLE);
+                    } else {
+                        compile.setText(R.string.edit);
+                        TextView title_text = (TextView) findViewById(R.id.title_text);
+                        title_text.setText(R.string.alarm);
+                        add.setText(R.string.new_alarm);
+                        LinearLayout delete = (LinearLayout) findViewById(R.id.delete);
+                        delete.setVisibility(View.GONE);
+                    }
+                    if (selectClock.length != 0) {
+                        Toast toast = Toast.makeText(Main2Activity.this, R.string.deleted_success, 2000);
+                        toast.setGravity(Gravity.CENTER,0,381);
+                        toast.show();
+                    }
+                    adapter.toggleEditStatus();
+                    if (alarmClockList.isEmpty()){
+                        setContentView(R.layout.activity_main);
+                        Button add = (Button) findViewById(R.id.add);
+                        add.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Main2Activity.this, NewAlarmClockActivity.class);//新建到新建窗口
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                }
+            });
+            getTime();
+            if (hours != null && minutes != null) {
+                for (int i = 0; i < sb.length(); i++) {
+                    timeHour = hours[i];
+                    timeMintue = minutes[i];
+                    week = weekArray[i];
+                    weekText = weekTextArray[i];
+                    alarmId = alarmIdArray[i];
+                    if (weekText != null) {
+                        if (getString(R.string.without_repetition).equals(weekText)) {
+                            calendar = Calendar.getInstance();
+                            calendar.setTimeInMillis(System.currentTimeMillis());
+                            calendar.set(Calendar.HOUR_OF_DAY, timeHour);
+                            calendar.set(Calendar.MINUTE, timeMintue);
+                            calendar.set(Calendar.SECOND, 0);
+                            if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+                                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                            }
+                            openAlarm(alarmId);
+                        } else if (!(getString(R.string.without_repetition).equals(weekText))) {
+                            if (week != null) {
+                                int[] a = new int[week.length()];
+                                for (int j = 0; j < week.length(); j++) {
+                                    a[j] = Integer.parseInt(String.valueOf(week.charAt(j)));
                                 }
-                                openAlarm(alarmId);
+                                Calendar c = Calendar.getInstance();
+                                c.setTimeInMillis(System.currentTimeMillis());
+                                int index = c.get(Calendar.DAY_OF_WEEK);
+                                if (a[index - 1] == 1) {
+                                    calendar = Calendar.getInstance();
+                                    calendar.setTimeInMillis(System.currentTimeMillis());
+                                    calendar.set(Calendar.HOUR_OF_DAY, timeHour);
+                                    calendar.set(Calendar.MINUTE, timeMintue);
+                                    if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+                                        calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                    }
+                                    openAlarm(alarmId);
+                                }
                             }
                         }
                     }
@@ -341,6 +370,8 @@ public class Main2Activity extends AppCompatActivity implements AdapterView.OnIt
         super.onStart();
         alarmClockList.clear();
         initAlarmClock();
-        adapter.notifyDataSetChanged();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
     }
 }

@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
@@ -54,14 +55,14 @@ public class NewAlarmClockActivity extends AppCompatActivity implements NumberPi
                 }
             }
         });
-        Button label = (Button) findViewById(R.id.label);
+        LinearLayout label = (LinearLayout)findViewById(R.id.label);
         label.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 labels.show(getFragmentManager(), "LabelFragment");
             }
         });
-        Button repetition = (Button) findViewById(R.id.repetition);
+        LinearLayout repetition = (LinearLayout)findViewById(R.id.repetition);
         repetition.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,7 +70,7 @@ public class NewAlarmClockActivity extends AppCompatActivity implements NumberPi
                 startActivityForResult(intent, request0);
             }
         });
-        Button sound = (Button) findViewById(R.id.sound);
+        LinearLayout sound = (LinearLayout)findViewById(R.id.sound);
         sound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,7 +78,7 @@ public class NewAlarmClockActivity extends AppCompatActivity implements NumberPi
                 startActivityForResult(intent, request1);
             }
         });
-        Button time = (Button) findViewById(R.id.time);
+        LinearLayout time = (LinearLayout)findViewById(R.id.time);
         time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

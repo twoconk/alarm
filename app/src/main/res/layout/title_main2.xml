@@ -7,7 +7,7 @@
 
     <Button
         android:id="@+id/compile"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:background="#000"
         android:paddingTop="15dp"
@@ -28,7 +28,7 @@
 
     <Button
         android:id="@+id/add"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:background="#000"
         android:paddingTop="15dp"

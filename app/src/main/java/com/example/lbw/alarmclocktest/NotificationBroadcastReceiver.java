@@ -32,7 +32,7 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private void stop() {
+    public static void stop() {
         if (OpenAlarmClockActivity.mMediaPlayer != null) {
             if (OpenAlarmClockActivity.mMediaPlayer.isPlaying()) {
                 OpenAlarmClockActivity.mMediaPlayer.stop();

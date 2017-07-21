@@ -21,6 +21,7 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 
 import java.util.Arrays;
@@ -60,9 +61,11 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
     //用于计算手指滑动的速度。
     private VelocityTracker mVelocityTracker;
 
+    @SuppressLint("WrongConstant")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_open_alarm_clock);
         ActivityCollector.AddActivity(this);
         final ActionBar actionBar = getSupportActionBar();
@@ -75,11 +78,12 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
                 startMusic();
             }
         } else {
-            start_continues_Music();
+            startContinuesMusic();
         }
         if (vib == 1) {
             startVibrator();
         }
+        closeWithoutRepetitionAlarm();
         if (num != 0) {
             showNotification();
         }
@@ -102,10 +106,24 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
         });
         RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.open_alarm_clock);
         relativeLayout.setOnTouchListener(this);
-        closeWithoutRepetitionAlarm();
+        TextView alarmTime = (TextView)findViewById(R.id.alarm_time);
+        Calendar calendar = Calendar.getInstance();
+        StringBuilder sb = new StringBuilder();
+        if (calendar.get(Calendar.HOUR_OF_DAY) < 10){
+            sb.append("0");
+        }
+        sb.append(calendar.get(Calendar.HOUR_OF_DAY));
+        sb.append(":");
+        if (calendar.get(Calendar.MINUTE) < 10){
+            sb.append("0");
+        }
+        sb.append(calendar.get(Calendar.MINUTE));
+        if (sb != null) {
+            alarmTime.setText(sb);
+        }
     }
 
-    private void start_continues_Music() {
+    private void startContinuesMusic() {
         mMediaPlayer = MediaPlayer.create(this, R.raw.alarm01);
         mMediaPlayer.setLooping(true);
         try {
@@ -132,15 +150,27 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
         PendingIntent pendingIntentCancel = PendingIntent.getBroadcast(this, 0, intentCancel, PendingIntent.FLAG_ONE_SHOT);
 
         if (getNextTime()) {
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.icon)
-                    .setContentTitle(getString(R.string.you_set) + num + getString(R.string.number_of_alarm))
-                    .setContentText("下一个闹钟" + year + "-" + mouth + "-" + day + " " + hour + ":" + minute)
-                    .setAutoCancel(true)
-                    .setContentIntent(pendingIntentClick)
-                    .setDeleteIntent(pendingIntentCancel);
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(1, notificationBuilder.build());
+            if (getNumberOfAlarm() != 0) {
+                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.icon)
+                        .setContentTitle(getString(R.string.you_set) + num + getString(R.string.number_of_alarm))
+                        .setContentText("下一个闹钟" + year + "-" + mouth + "-" + day + " " + hour + ":" + minute)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntentClick)
+                        .setDeleteIntent(pendingIntentCancel);
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(1, notificationBuilder.build());
+            }else {
+                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.icon)
+                        .setContentTitle(getString(R.string.you_set) + num + getString(R.string.number_of_alarm))
+                        .setContentText("没有下一个闹钟了")
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntentClick)
+                        .setDeleteIntent(pendingIntentCancel);
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(1, notificationBuilder.build());
+            }
         } else {
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.icon)
@@ -152,6 +182,12 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(1, notificationBuilder.build());
         }
+    }
+
+    private int getNumberOfAlarm() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select * from AlarmClock where state= ? ", new String[]{"1"});
+        return cursor.getCount();
     }
 
     public void startMusic() {
@@ -274,9 +310,9 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
                 int distanceX = (int) (xMove - xDown);
                 int xSpeed = getScrollVelocity();
                 if (distanceX > XDISTANCE_MIN && xSpeed > XSPEED_MIN) {
-                    /*Intent intent = new Intent(OpenAlarmClockActivity.this,Main2Activity.class);
+                    Intent intent = new Intent(OpenAlarmClockActivity.this,Main2Activity.class);
                     startActivity(intent);
-                    overridePendingTransition(R.anim.move_left_in, R.anim.move_right_out);*/
+                    overridePendingTransition(R.anim.move_left_in, R.anim.move_right_out);
                     finish();
                 }
                 break;
@@ -381,4 +417,6 @@ public class OpenAlarmClockActivity extends AppCompatActivity implements View.On
             cancelVibrator();
         }
     }
+
+
 }
