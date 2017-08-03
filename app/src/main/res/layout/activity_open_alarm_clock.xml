@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/open_alarm_clock"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#3d4992"
+    tools:context="com.example.lbw.alarmclocktest.OpenAlarmClockActivity">
+
+    <TextView
+        android:id="@+id/alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="@string/alarm"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/alarm_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/alarm"
+        android:layout_centerHorizontal="true"
+        android:textColor="#ffffff"
+        android:textSize="73sp" />
+
+    <ImageView
+        android:id="@+id/perture"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/sleep" />
+
+    <Button
+        android:id="@+id/sleep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/perture"
+        android:layout_centerHorizontal="true"
+        android:background="#3d4992"
+        android:text="@string/sleep"
+        android:textColor="#ffffff"
+        android:textSize="13sp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="145dp"
+        android:layout_alignParentBottom="true">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_right" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/close_alarm"
+                android:textColor="#ffffff"
+                android:textSize="14dp" />
+        </LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>
